@@ -1,0 +1,37 @@
+# Levanta la base de datos (PostgreSQL) y el servicio con UN solo comando:
+#     docker compose up --build
+# Requiere un archivo .env en esta carpeta (copia de .env.example con DB_PASSWORD y JWT_SECRET completados).
+# La base se crea sola con db/schema.sql y db/seed.sql la primera vez.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: sanomovil
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Falta DB_PASSWORD en el archivo .env}
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sanomovil"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/sanomovil
+      DB_USER: postgres
+      PORT: "8080"
+      TRUST_PROXY: "false"
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
