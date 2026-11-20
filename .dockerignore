@@ -1,0 +1,8 @@
+.git
+.env
+**/build
+**/.gradle
+**/.kotlin
+app
+docs
+*.md
