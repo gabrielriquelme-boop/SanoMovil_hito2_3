@@ -26,18 +26,19 @@ interface ProveedorAutenticacion {
 }
 
 internal object Autenticacion {
-    /** ← Aquí se cambia a la versión con Firebase/Google cuando esté lista. */
-    var proveedor: ProveedorAutenticacion = AutenticacionDemo
+    /** Cuentas reales contra el servidor del Hito 2. Para volver al modo demostración: AutenticacionDemo. */
+    var proveedor: ProveedorAutenticacion = AutenticacionApi
 
     private val CORREO = Regex("^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,190}\\.[A-Za-z]{2,}$")
 
     fun correoValido(c: String): Boolean = c.length <= 254 && CORREO.matches(c)
-    fun claveValida(c: String): Boolean = c.length in 8..64
+    // Mismas reglas que el servidor: 8 a 64 caracteres, con al menos una letra y un número.
+    fun claveValida(c: String): Boolean = c.length in 8..64 && c.any { it.isLetter() } && c.any { it.isDigit() }
 
     /** Mensaje para la persona si algo está mal escrito (o null si todo está bien). */
     fun revisar(correo: String, clave: String): String? = when {
         !correoValido(correo) -> "Revisa el correo: debe verse como nombre@ejemplo.com"
-        !claveValida(clave) -> "La contraseña debe tener entre 8 y 64 caracteres."
+        !claveValida(clave) -> "La contraseña debe tener entre 8 y 64 caracteres, con al menos una letra y un número."
         else -> null
     }
 
