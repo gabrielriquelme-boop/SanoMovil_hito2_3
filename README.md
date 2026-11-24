@@ -131,6 +131,3 @@ El informe final también contiene la declaración de uso de inteligencia artifi
 - **Manual de uso e instalación:** requisitos, permisos, instalación de APK, primer acceso, uso por secciones, escenarios de prueba y resolución de fallas.
 - **Informe técnico Hito 2:** [Documento_Tecnico_Hito2.pdf](docs/Documento_Tecnico_Hito2.pdf), como antecedente detallado del backend, API y persistencia.
 
-## Video promocional
-
-**Pendiente:** agregar aquí el enlace público del video promocional (duración máxima de 2:00), comprobando que pueda visualizarse sin solicitar permisos de acceso.
