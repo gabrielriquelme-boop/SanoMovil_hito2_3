@@ -17,11 +17,13 @@ import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
-import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
+import io.ktor.server.plugins.forwardedheader.XForwardedHeaders
 import io.ktor.server.plugins.ratelimit.RateLimit
 import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
@@ -97,6 +99,12 @@ fun Application.configurar(config: Config, servicios: Servicios) {
     }
 
     routing {
+        // Ruta informativa para abrir la URL base del servicio desde un navegador.
+        // La API conserva sus endpoints versionados bajo /api/v1.
+        get("/") {
+            call.respondText("SanoMovil API activa. Comprobación de salud: /api/v1/salud")
+        }
+
         // Versionado por ruta: /api/v1. Un cambio que rompa el contrato saldría como /api/v2.
         route("/api/v1") {
             rutasSalud(servicios.salud)
