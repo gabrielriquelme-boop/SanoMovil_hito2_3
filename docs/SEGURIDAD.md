@@ -39,7 +39,7 @@ Este documento explica **qué ataques consideramos, qué hicimos para frenarlos 
 | Exigencia del curso | Qué hacemos |
 |---|---|
 | Qué datos se tratan y para qué | Correo y nombre (crear y reconocer la cuenta); equipos (marca, modelo, apodo) y revisiones (puntaje, nivel, hallazgos) para mostrar el historial del equipo |
-| Por qué son necesarios y no otros (minimización) | No se guardan contraseñas en claro, lista de aplicaciones, archivos, ubicación ni contactos. El registro de accesos guarda solo el id, la acción y la fecha (no el correo) |
+| Por qué son necesarios y no otros (minimización) | No se guarda una exportación completa de la lista de aplicaciones, el contenido de archivos, ubicación ni contactos. La app puede enviar el texto de hallazgos del análisis preventivo y ese texto puede mencionar una aplicación detectada. La contraseña no se almacena en claro. El registro de accesos guarda solo el id, la acción y la fecha (no el correo) |
 | Medidas técnicas | Control de acceso por usuario y rol, contraseñas hasheadas, registro de accesos, usuario de base con permisos mínimos, HTTPS en producción, cifrado del disco |
 | Qué pasa si el usuario pide eliminar sus datos | `DELETE /api/v1/auth/yo` borra la cuenta y, en cascada, sus equipos, revisiones y hallazgos |
 | Datos de prueba | Todos los datos de ejemplo son ficticios |
@@ -52,3 +52,15 @@ Este documento explica **qué ataques consideramos, qué hicimos para frenarlos 
 - No hay verificación del correo ni doble factor de autenticación.
 - Faltan revisiones automáticas de dependencias; se recomienda activar **Dependabot** y el **análisis de secretos** de GitHub (Settings > Code security).
 - Registrar un correo ya existente responde 409, lo que permite saber si un correo está registrado. Es un compromiso entre seguridad y facilidad de uso.
+
+
+## 6. Integración con el cliente Android (Hito 3)
+
+La aplicación Android tiene dos modos de uso:
+
+- **Sin cuenta:** diagnóstico, análisis preventivo y guías se ejecutan localmente. Las revisiones y equipos se conservan en el dispositivo y no se sincronizan con el backend.
+- **Con cuenta:** el cliente utiliza HTTPS para registro/inicio de sesión y envía el token JWT en las solicitudes protegidas. Sincroniza los equipos del usuario y el resumen de las revisiones.
+
+El resumen enviado por el cliente puede incluir puntaje, nivel, porcentajes disponibles de batería y espacio, y hasta 30 hallazgos con código, nivel, título y detalle. El detalle de un hallazgo puede mencionar el nombre de una aplicación que el análisis local identificó como señal de riesgo. El flujo no envía el contenido de archivos personales ni un inventario completo de las aplicaciones instaladas.
+
+El acceso remoto se realiza con correo y contraseña. El cliente no conserva la contraseña en preferencias; el servidor almacena su hash BCrypt y emite un JWT. La app no ofrece inicio de sesión con Google ni notificaciones push en esta versión. Para el detalle de rutas y del funcionamiento del cliente, revisar [INTEGRACION_ANDROID_API.md](INTEGRACION_ANDROID_API.md).
