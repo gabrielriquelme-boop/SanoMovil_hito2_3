@@ -31,8 +31,9 @@ internal object Ecosistema {
     const val MAX = 8
 
     private const val ARCHIVO = "sano_ecosistema"
-    private val TEXTO = Regex("^[\\p{L}\\p{N} ._()+/-]{1,40}$")
-    private val ID = Regex("^[a-f0-9]{8}$")
+    // Mismos caracteres que acepta el servidor.
+    private val TEXTO = Regex("^[\\p{L}\\p{N} ._-]{1,40}$")
+    private val ID = Regex("^[a-f0-9]{1,12}$")   // ids locales (8 letras/números) o ids numéricos del servidor
 
     private fun textoValido(t: String): Boolean = TEXTO.matches(t)
 
@@ -74,9 +75,9 @@ internal object Ecosistema {
         val lista = leer(ctx)
         return when {
             lista.size >= MAX -> "Llegaste al máximo de $MAX equipos. Elimina uno para agregar otro."
-            !textoValido(m) -> "Revisa la marca: usa solo letras, números y espacios."
-            !textoValido(mo) -> "Revisa el modelo: usa solo letras, números y espacios."
-            a.isNotEmpty() && !textoValido(a) -> "Revisa el nombre: usa solo letras, números y espacios."
+            !textoValido(m) -> "Revisa la marca: usa solo letras, números, espacios, punto y guion."
+            !textoValido(mo) -> "Revisa el modelo: usa solo letras, números, espacios, punto y guion."
+            a.isNotEmpty() && !textoValido(a) -> "Revisa el nombre: usa solo letras, números, espacios, punto y guion."
             else -> {
                 val id = UUID.randomUUID().toString().replace("-", "").take(8)
                 guardar(ctx, lista + DispositivoFamilia(id, tipo, m, mo, a))
@@ -88,6 +89,57 @@ internal object Ecosistema {
     fun eliminar(ctx: Context, id: String) {
         guardar(ctx, leer(ctx).filter { it.id != id })
         quitar(ctx, id)
+    }
+
+    // ---------- Con cuenta: los equipos viven en el servidor y aquí queda una copia para mostrarlos rápido ----------
+
+    /** ¿Hay una cuenta conectada al servidor? Si no, los equipos se guardan solo en este teléfono. */
+    fun conServidor(): Boolean = Api.hayToken()
+
+    /** Trae los equipos del servidor y actualiza la copia local. Devuelve null si salió bien, o un mensaje de error. */
+    suspend fun sincronizar(ctx: Context): String? {
+        if (!Api.hayToken()) return null
+        return when (val r = Api.listarEquipos()) {
+            is RespuestaApi.Ok -> {
+                guardar(ctx, Api.aDispositivos(r.cuerpo).take(MAX))
+                null
+            }
+            is RespuestaApi.Fallo -> r.mensaje
+        }
+    }
+
+    /** Valida lo escrito, lo guarda en el servidor y actualiza la copia local. Null si salió bien. */
+    suspend fun agregarRemoto(ctx: Context, tipo: TipoDispositivo, marca: String, modelo: String, apodo: String): String? {
+        val m = marca.trim()
+        val mo = modelo.trim()
+        val a = apodo.trim()
+        val problema = when {
+            !textoValido(m) -> "Revisa la marca: usa solo letras, números, espacios, punto y guion."
+            !textoValido(mo) -> "Revisa el modelo: usa solo letras, números, espacios, punto y guion."
+            a.isNotEmpty() && !textoValido(a) -> "Revisa el nombre: usa solo letras, números, espacios, punto y guion."
+            else -> null
+        }
+        if (problema != null) return problema
+        return when (val r = Api.crearEquipo(tipo, m, mo, a)) {
+            is RespuestaApi.Fallo -> r.mensaje
+            is RespuestaApi.Ok -> sincronizar(ctx)
+        }
+    }
+
+    /** Borra el equipo en el servidor y luego en la copia local. Null si salió bien. */
+    suspend fun eliminarRemoto(ctx: Context, id: String): String? =
+        when (val r = Api.borrarEquipo(id)) {
+            is RespuestaApi.Fallo -> r.mensaje
+            is RespuestaApi.Ok -> {
+                quitar(ctx, id)
+                sincronizar(ctx)
+            }
+        }
+
+    /** Al cerrar sesión se borra la copia local, para no dejar en el teléfono los equipos de una cuenta. */
+    fun vaciar(ctx: Context) {
+        guardar(ctx, emptyList())
+        guardarColocados(ctx, emptyList())
     }
 
     // ---------- Equipos colocados en la zona "Mis dispositivos" (se guarda el orden) ----------
