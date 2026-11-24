@@ -17,7 +17,7 @@ Sano Móvil es una aplicación Android nativa desarrollada con Kotlin y Jetpack 
 | Recurso | Enlace |
 |---|---|
 | **Aplicación Android (APK)** | [Descargar SanoMovil.apk · versión 1.0.0](https://github.com/gabrielriquelme-boop/SanoMovil_hito2_3/releases/download/v1.0.0/SanoMovil.apk) |
-| **Informe técnico final Hito 3** | [docs/Informe_Final_Hito3_Sano_Movil.pdf](docs/Informe_Final_Hito3_Sano_Movil.pdf) |
+| **Informe técnico final Hito 3** | [Informe_Final_Hito3_Sano_Movil.pdf](https://github.com/user-attachments/files/35362651/Informe_Final_Hito3_Sano_Movil.pdf) |
 | **Manual de uso e instalación** | [docs/Manual_Usuario_Instalacion_Sano_Movil.pdf](docs/Manual_Usuario_Instalacion_Sano_Movil.pdf) |
 | **Video promocional (máximo 2 minutos)** | https://youtube.com/shorts/FsBigcUj5UM |
 | **Código fuente Android** | [carpeta app/](app/) |
