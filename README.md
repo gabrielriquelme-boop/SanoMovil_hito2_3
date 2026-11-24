@@ -27,7 +27,7 @@ El servicio del Hito 2 se probó con una colección de **54 peticiones y 71 prue
 
 - **Prototipo navegable (Hito 1):** https://matiasac3.github.io/sano-movil/demo.html
 - **Descarga de la aplicación Android (APK):** [Versiones publicadas en GitHub Releases](https://github.com/gabrielriquelme-boop/SanoMovil_hito2_3/releases)
-- **Documentos (PDF, diagramas e imágenes):** carpeta [`docs/`](docs/)
+- **Documento técnico Hito 2 (PDF):** [`docs/Documento_Tecnico_Hito2.pdf`](docs/Documento_Tecnico_Hito2.pdf) (subir el archivo siguiendo la guía de entregables).
 - **Tabla de la API (Hito 2):** [`docs/API.md`](docs/API.md)
 - **Colección de pruebas (Postman):** [`docs/sano-movil.postman_collection.json`](docs/sano-movil.postman_collection.json)
 - **Modelo de datos y script de creación:** carpeta [`db/`](db/)
