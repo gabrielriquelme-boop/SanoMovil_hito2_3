@@ -115,6 +115,8 @@ fun PantallaLogin(onEntrar: (Sesion) -> Unit, onOmitir: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         )
 
+        Txt("Mínimo 8 caracteres, con letras y números.", 14, Tema.TextoSuave)
+        if (trabajando) Txt("Conectando con el servidor… la primera vez puede tardar hasta un minuto.", 15, Tema.TextoSuave)
         error?.let { Txt(it, 16, Tema.Peligro, negrita = true) }
 
         BotonSano(
@@ -139,22 +141,10 @@ fun PantallaLogin(onEntrar: (Sesion) -> Unit, onOmitir: () -> Unit) {
             Txt(if (registrando) "Ya tengo cuenta" else "Es mi primera vez: crear cuenta", 17, Tema.Boton, negrita = true)
         }
 
-        Txt("o", 16, Tema.TextoSuave, centrado = true, modifier = Modifier.fillMaxWidth())
-
-        BotonSano("Continuar con Google", color = Tema.BotonSecundario, activo = !trabajando) {
-            val actividad = ctx.actividad()
-            if (actividad == null) {
-                error = "No se pudo abrir Google en este momento."
-            } else {
-                error = null
-                trabajando = true
-                scope.launch { resolver(proveedor.conGoogle(actividad)) }
-            }
-        }
-
         Spacer(Modifier.height(4.dp))
         TextButton(onClick = onOmitir, modifier = Modifier.fillMaxWidth()) {
             Txt("Continuar sin cuenta", 18, Tema.TextoSuave, negrita = true)
         }
     }
 }
+

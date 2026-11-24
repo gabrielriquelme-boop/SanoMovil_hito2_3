@@ -27,6 +27,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,11 +72,22 @@ fun PantallaEcosistema(
     onPestana: (Pestana) -> Unit
 ) {
     val context = LocalContext.current
-    // Se vuelve a leer la lista cada vez que se cambia de subpantalla.
-    val lista by remember(sub) { mutableStateOf(Ecosistema.leer(context)) }
+    // La lista se lee del teléfono y, si hay cuenta, se actualiza desde el servidor cada vez que se cambia de subpantalla.
+    var lista by remember { mutableStateOf(Ecosistema.leer(context)) }
+    var cargando by remember { mutableStateOf(false) }
+    var errorRed by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(sub) {
+        lista = Ecosistema.leer(context)
+        if (Ecosistema.conServidor()) {
+            cargando = true
+            errorRed = Ecosistema.sincronizar(context)
+            lista = Ecosistema.leer(context)
+            cargando = false
+        }
+    }
 
     when (sub) {
-        null -> ZonaEquipos(lista, onAgregar, onAbrir, onVolver, onPestana)
+        null -> ZonaEquipos(lista, cargando, errorRed, onAgregar, onAbrir, onVolver, onPestana)
         SubEcosistema.AGREGAR -> FormularioDispositivo(onGuardado = onListo, onVolver = onVolver)
         SubEcosistema.FICHA -> FichaDispositivo(dispositivoId, lista, ultima, onListo, onGuia, onVolver)
     }
@@ -85,6 +98,8 @@ fun PantallaEcosistema(
 @Composable
 private fun ZonaEquipos(
     lista: List<DispositivoFamilia>,
+    cargando: Boolean,
+    errorRed: String?,
     onAgregar: () -> Unit,
     onAbrir: (String) -> Unit,
     onVolver: () -> Unit,
@@ -145,6 +160,8 @@ private fun ZonaEquipos(
         ) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Txt("Arrastra un equipo a tu zona, o tócalo.", 15, Tema.TextoSuave)
+                if (cargando) Txt("Sincronizando con el servidor…", 14, Tema.TextoSuave)
+                errorRed?.let { Txt(it, 14, Tema.Peligro, negrita = true) }
 
                 // ---- Zona "Mis dispositivos"
                 Column(
@@ -321,6 +338,8 @@ private fun FichaDispositivo(
     val esEste = dispositivoId == Ecosistema.ESTE_EQUIPO
     val d = lista.firstOrNull { it.id == dispositivoId }
     var confirmar by remember { mutableStateOf(false) }
+    var errorBorrar by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     // Si el equipo ya no existe (por ejemplo, se acaba de eliminar), se vuelve a la zona.
     if (!esEste && d == null) {
@@ -340,6 +359,7 @@ private fun FichaDispositivo(
                     "Última revisión",
                     if (ultima == null) "Aún sin revisar" else "${ultima.puntaje} de 100 · ${Escaner.etiquetaDe(ultima.nivel)}"
                 )
+                HistorialServidor()
             } else if (d != null) {
                 FilaDato("Tipo", d.tipo.titulo)
                 FilaDato("Marca y modelo", "${d.marca} ${d.modelo}")
@@ -390,12 +410,22 @@ private fun FichaDispositivo(
             confirmButton = {
                 TextButton(onClick = {
                     confirmar = false
-                    Ecosistema.eliminar(context, d.id)
-                    onListo()
+                    scope.launch {
+                        if (Ecosistema.conServidor()) {
+                            errorBorrar = Ecosistema.eliminarRemoto(context, d.id)
+                        } else {
+                            Ecosistema.eliminar(context, d.id)
+                        }
+                        if (errorBorrar == null) onListo()
+                    }
                 }) { Text("Sí, quitar") }
             },
             dismissButton = { TextButton(onClick = { confirmar = false }) { Text("Cancelar") } }
         )
+    }
+
+    errorBorrar?.let { mensaje ->
+        DialogoMensaje(texto = mensaje, titulo = "No se pudo quitar el equipo") { errorBorrar = null }
     }
 }
 
@@ -417,6 +447,8 @@ private fun FormularioDispositivo(onGuardado: () -> Unit, onVolver: () -> Unit) 
     var modelo by rememberSaveable { mutableStateOf("") }
     var apodo by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+    var guardando by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     PantallaBase("Agregar un equipo", onVolver, textoVolver = "← Cancelar") {
         ZonaScroll {
@@ -437,9 +469,20 @@ private fun FormularioDispositivo(onGuardado: () -> Unit, onVolver: () -> Unit) 
 
             error?.let { Txt(it, 15, Tema.Peligro, negrita = true) }
 
-            BotonSano("Guardar") {
-                error = Ecosistema.agregar(context, tipo, marca, modelo, apodo)
-                if (error == null) onGuardado()
+            if (guardando) Txt("Guardando… la primera vez puede tardar hasta un minuto.", 14, Tema.TextoSuave)
+
+            BotonSano(if (guardando) "Guardando…" else "Guardar", activo = !guardando) {
+                error = null
+                guardando = true
+                scope.launch {
+                    error = if (Ecosistema.conServidor()) {
+                        Ecosistema.agregarRemoto(context, tipo, marca, modelo, apodo)
+                    } else {
+                        Ecosistema.agregar(context, tipo, marca, modelo, apodo)
+                    }
+                    guardando = false
+                    if (error == null) onGuardado()
+                }
             }
         }
     }
@@ -455,3 +498,32 @@ private fun Campo(etiqueta: String, valor: String, onCambio: (String) -> Unit) {
         modifier = Modifier.fillMaxWidth()
     )
 }
+
+/** Historial de revisiones de ESTE teléfono, leído del servidor (con estados de carga, vacío y error). */
+@Composable
+private fun HistorialServidor() {
+    if (!Api.hayToken()) {
+        Txt("Inicia sesión desde tu perfil para guardar el historial de tus revisiones en tu cuenta.", 15, Tema.TextoSuave)
+        return
+    }
+    var cargando by remember { mutableStateOf(true) }
+    var problema by remember { mutableStateOf<String?>(null) }
+    var filas by remember { mutableStateOf<List<FilaHistorial>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        val (lista, error) = Api.historialDeEsteTelefono()
+        filas = lista
+        problema = error
+        cargando = false
+    }
+
+    Txt("Historial guardado en tu cuenta", 18, negrita = true)
+    val mensaje = problema
+    when {
+        cargando -> Txt("Cargando desde el servidor…", 15, Tema.TextoSuave)
+        mensaje != null -> Txt(mensaje, 15, Tema.Peligro, negrita = true)
+        filas.isEmpty() -> Txt("Todavía no hay revisiones guardadas. Haz una desde Inicio con «Escanear».", 15, Tema.TextoSuave)
+        else -> filas.forEach { f -> FilaDato(f.fecha, "${f.puntaje} de 100 · ${Escaner.etiquetaDe(f.nivel)}") }
+    }
+}
+
