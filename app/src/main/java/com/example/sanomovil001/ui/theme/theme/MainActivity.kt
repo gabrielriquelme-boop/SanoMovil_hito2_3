@@ -10,12 +10,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 
 /** Las pantallas de la app. Inicio, Mis equipos, Gestionar y Guías de ayuda tienen la barra de abajo. */
@@ -32,6 +34,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Api.iniciar(this)   // lee el token de sesión guardado
         Almacen.cargarAjustes(this)   // modo oscuro, contraste, movimiento y tamaño de letra de la vez anterior
         setContent {
             // Los íconos de la barra de arriba y de abajo cambian según el modo elegido.
@@ -70,9 +73,22 @@ fun SanoMovilApp(reanudado: Int) {
     var ultima by remember { mutableStateOf(Almacen.leer(context)) }
 
     // Cuenta: sin sesión y sin haber elegido "continuar sin cuenta", primero se muestra el inicio de sesión.
-    var sesion by remember { mutableStateOf(SesionLocal.leer(context)) }
+    // Sin token del servidor no hay sesión válida: se pide iniciar sesión de nuevo.
+    var sesion by remember { mutableStateOf(SesionLocal.leer(context)?.takeIf { Api.hayToken() }) }
     var omitido by remember { mutableStateOf(SesionLocal.omitido(context)) }
     var verLogin by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    // Si el servidor dice que la sesión expiró, se vuelve al inicio de sesión.
+    if (Api.sesionExpirada) {
+        LaunchedEffect(Unit) {
+            SesionLocal.cerrar(context)
+            Ecosistema.vaciar(context)
+            sesion = null
+            Api.sesionExpirada = false
+            verLogin = true
+        }
+    }
 
     if (verLogin || (sesion == null && !omitido)) {
         PantallaLogin(
@@ -184,6 +200,13 @@ fun SanoMovilApp(reanudado: Int) {
                 Almacen.guardar(context, r)
                 ultima = Almacen.leer(context)
                 pantalla = Pantalla.RESULTADO
+                // Con cuenta, la revisión también se guarda en el servidor.
+                if (Api.hayToken()) {
+                    scope.launch {
+                        val problema = Api.guardarRevision(context, r)
+                        if (problema != null) aviso = "No se guardó en tu cuenta" to problema
+                    }
+                }
             },
             onCancelar = { atras() }
         )
@@ -234,6 +257,7 @@ fun SanoMovilApp(reanudado: Int) {
             onCerrarSesion = {
                 Autenticacion.proveedor.cerrarSesion()
                 SesionLocal.cerrar(context)
+                Ecosistema.vaciar(context)
                 sesion = null
                 omitido = true
             },
@@ -245,3 +269,4 @@ fun SanoMovilApp(reanudado: Int) {
         DialogoMensaje(texto = texto, titulo = titulo) { aviso = null }
     }
 }
+
