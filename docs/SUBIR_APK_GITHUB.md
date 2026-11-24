@@ -1,12 +1,25 @@
-# Publicar SanoMovil.apk en GitHub Releases
+# Archivos de entrega: documento técnico PDF y aplicación APK
 
-Esta guía explica cómo adjuntar el instalador Android al repositorio sin incorporarlo al historial del código fuente.
+Esta guía explica cómo dejar los dos entregables descargables para la evaluación: el documento técnico en la carpeta `docs/` y la aplicación Android como recurso de una versión en GitHub Releases.
 
-## Antes de empezar
+## 1. Subir el documento técnico PDF a docs/
 
-Ten disponible el archivo `SanoMovil.apk` (la versión de demostración entregada por el equipo). Comprueba que el nombre sea exactamente `SanoMovil.apk`.
+1. Descarga el archivo `Documento_Tecnico_Hito2.pdf` que preparó el equipo.
+2. Abre el repositorio: https://github.com/gabrielriquelme-boop/SanoMovil_hito2_3
+3. Entra a la carpeta **docs**.
+4. Pulsa **Add file** y después **Upload files**.
+5. Selecciona `Documento_Tecnico_Hito2.pdf` desde tu computador o arrástralo al área de carga.
+6. Espera a que termine la carga. Comprueba que el nombre del archivo sea exactamente `Documento_Tecnico_Hito2.pdf`.
+7. En **Commit changes**, escribe: `Agrega documento técnico PDF del Hito 2`.
+8. Pulsa **Commit changes** para guardar el archivo en la rama principal.
 
-## Crear la versión
+El documento tiene 23 páginas, por debajo del máximo de 30 páginas indicado en la pauta.
+
+## 2. Publicar SanoMovil.apk en GitHub Releases
+
+La APK es el instalador Android. Se publica como recurso de una versión, separado de los archivos de código.
+
+### Crear la versión
 
 1. Abre el repositorio: https://github.com/gabrielriquelme-boop/SanoMovil_hito2_3
 2. En la parte superior, entra en **Releases**.
@@ -24,7 +37,7 @@ Ten disponible el archivo `SanoMovil.apk` (la versión de demostración entregad
 8. Espera a que termine la carga y comprueba que el archivo aparezca adjunto con el nombre correcto.
 9. Pulsa **Publish release**.
 
-## Verificar la descarga
+### Verificar la descarga
 
 1. Abre la pestaña **Releases** del repositorio.
 2. Entra a la versión que acabas de publicar.
@@ -35,13 +48,21 @@ La página de versiones es:
 
 https://github.com/gabrielriquelme-boop/SanoMovil_hito2_3/releases
 
-## Por qué usamos Releases
+## 3. Comprobación final de entregables
 
-La APK es un archivo binario de instalación, no código fuente. Publicarla como recurso de una versión mantiene la carpeta del código más ordenada y permite identificar qué versión de la app se entregó.
+La pauta pide que el repositorio incluya:
 
-## Antes de la demostración
+- Código del servicio en la rama principal, con estructura de capas visible.
+- Documento técnico PDF dentro de `docs/`, máximo 30 páginas sin contar anexos.
+- Tabla o documentación de rutas, verbos, parámetros, cuerpo de ejemplo y códigos de estado.
+- Modelo de datos y script de creación dentro de `db/`.
+- Colección del cliente de pruebas lista para importar.
+- Archivo de configuración de ejemplo en la raíz, sin credenciales reales.
+- APK Android adjunta a una versión de GitHub Releases para que el profesor pueda descargarla.
+
+## 4. Antes de la demostración
 
 - Instala y prueba la misma APK que publicaste.
 - Comprueba que el backend responda en `/api/v1/salud`.
 - La instancia gratuita de Render puede tardar en responder si estuvo inactiva; abre la ruta de salud unos minutos antes de la demostración.
-- No incluyas archivos `.env`, contraseñas, tokens ni credenciales en la versión.
+- No incluyas archivos `.env`, contraseñas, tokens ni credenciales en GitHub.
