@@ -18,14 +18,15 @@ Proyecto del ramo **INGT1003 · Arquitectura de Desarrollo (Móvil y Web)**, Uni
 | Hito | Contenido | Estado |
 |---|---|---|
 | Hito 1 | Propuesta, prototipo de la app Android y diagramas | Entregado |
-| **Hito 2** | **Servicio REST con base de datos PostgreSQL** | **En este repositorio** (carpetas `backend/` y `db/`) |
-| Hito 3 | Conexión de la app con el servidor | Pendiente |
+| **Hito 2** | **Servicio REST con base de datos PostgreSQL** | **Implementado en este repositorio** (carpetas `backend/` y `db/`) |
+| Hito 3 | Integración de la app con el servidor | **Conexión funcional comprobada por el equipo con una APK de demostración**; se continúa documentando y preparando la entrega |
 
-El servicio del Hito 2 se probó con una colección de **54 peticiones y 71 pruebas automáticas, todas aprobadas**, contra una base PostgreSQL real.
+El servicio del Hito 2 se probó con una colección de **54 peticiones y 71 pruebas automáticas, todas aprobadas**, contra una base PostgreSQL real. Además, el equipo comprobó el flujo de conexión desde la aplicación Android hacia el servicio desplegado.
 
 ## Enlaces
 
 - **Prototipo navegable (Hito 1):** https://matiasac3.github.io/sano-movil/demo.html
+- **Descarga de la aplicación Android (APK):** [Versiones publicadas en GitHub Releases](https://github.com/gabrielriquelme-boop/SanoMovil_hito2_3/releases)
 - **Documentos (PDF, diagramas e imágenes):** carpeta [`docs/`](docs/)
 - **Tabla de la API (Hito 2):** [`docs/API.md`](docs/API.md)
 - **Colección de pruebas (Postman):** [`docs/sano-movil.postman_collection.json`](docs/sano-movil.postman_collection.json)
@@ -33,6 +34,7 @@ El servicio del Hito 2 se probó con una colección de **54 peticiones y 71 prue
 - **Seguridad del servicio:** [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md)
 - **Guía de instalación paso a paso en Windows:** [`docs/INSTALACION_WINDOWS.md`](docs/INSTALACION_WINDOWS.md)
 - **Despliegue gratuito en la nube:** [`docs/DESPLIEGUE_GRATIS.md`](docs/DESPLIEGUE_GRATIS.md)
+- **Cómo publicar la APK:** [`docs/SUBIR_APK_GITHUB.md`](docs/SUBIR_APK_GITHUB.md)
 
 ## Qué cambió desde el Hito 1
 
@@ -74,6 +76,10 @@ El servicio del Hito 2 se probó con una colección de **54 peticiones y 71 prue
 └── README.md
 ```
 
+## Descargar e instalar la APK
+
+La APK de demostración se publica como archivo adjunto de una versión en [GitHub Releases](https://github.com/gabrielriquelme-boop/SanoMovil_hito2_3/releases). Abre la versión más reciente y descarga el archivo `SanoMovil.apk`. La guía para crear la publicación está en [`docs/SUBIR_APK_GITHUB.md`](docs/SUBIR_APK_GITHUB.md).
+
 ## Levantar el servicio (back-end)
 
 Hay tres formas. **Elige una.**
@@ -94,7 +100,7 @@ Guía con todos los pasos en [`docs/INSTALACION_WINDOWS.md`](docs/INSTALACION_WI
 1. **Crear la base.** Desde la raíz: `psql -U postgres -f db/crear_base.sql`
    (con pgAdmin o con el editor SQL de Neon: crear la base y ejecutar `db/schema.sql` y luego `db/seed.sql`).
 2. **Variables.** Copiar `.env.example` como `.env` y completar `DB_URL`, `DB_USER`, `DB_PASSWORD` y `JWT_SECRET`. Si la base está en Neon, `DB_URL` termina en `?sslmode=require`.
-3. **Arrancar.** En Android Studio: *File > Open* en la carpeta `backend` y ejecutar `Application.kt` (triángulo verde junto a `fun main()`). También: `cd backend` y `.\gradlew run`.
+3. **Arrancar.** En Android Studio: *File > Open* en la carpeta `backend` y ejecutar `Application.kt` (triángulo verde junto a `fun main()`). También: `cd backend` y ` .\gradlew run`.
 4. **Comprobar.** http://localhost:8080/api/v1/salud
 
 ### Probar la API (cualquier opción)
